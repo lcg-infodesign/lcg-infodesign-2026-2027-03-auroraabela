@@ -22,10 +22,10 @@ let colorScale = {
 }
 
 let widthScale = {
-  'S': 20,
-  'M': 35,
-  'L': 50,
-  'XL': 65,
+  'S': 15,
+  'M': 30,
+  'L': 45,
+  'XL': 60,
 }
 
 
@@ -36,8 +36,9 @@ async function setup() {
 
 function draw() {
 
-  background(20);
+  background("#14171C");
   noStroke();
+  drawTitolo();
 
   //altezza scaffali
   let shelfHeight = (height - topSpace - bottomSpace) / shelvesNumber;
@@ -58,16 +59,15 @@ function draw() {
     let baseY = topSpace + (shelfNumber + 1) * shelfHeight;
 
     if (rowNumber % booksNumber == 0) {
-      xPos = margin;
-      fill(90, 64, 48);
-      rect(margin - 10, baseY, width - 2 * margin + 20, 10);
+      xPos = margin + 24;
+      drawMensola(baseY, shelfHeight)
     }
 
     let bookHeight = map(score, minScore, maxScore, shelfHeight * 0.45, shelfHeight * 0.9);
     let bookWidth = widthScale[size];
 
-    fill(colorScale[continent]);
-    rect(xPos, baseY - bookHeight, bookWidth, bookHeight);
+    drawLibro(xPos, baseY, bookWidth, bookHeight, colorScale[continent]);
+
 
     if (
       mouseX >= xPos &&
@@ -81,6 +81,8 @@ function draw() {
     xPos += bookWidth + gutter;
   }
 
+  drawLegenda();
+
   //etichetta mouse
   if (label != "") {
     textSize(14);
@@ -89,6 +91,69 @@ function draw() {
     fill(255);
     text(label, mouseX + 10, mouseY + 20);
   }
+}
 
+
+function drawMensola(baseY, shelfHeight) {
+  noStroke();
+
+  //asse mensola
+  fill("#5A4030");
+  rect(margin - 10, baseY, width - 2 * margin + 20, 18);
+
+  //luce asse di legno
+  fill("#7A5A42");
+  rect(margin - 10, baseY, width - 2 * margin + 20, 6);
+
+  //ombra asse di legno
+  fill("black");
+  rect(margin - 10, baseY + 18, width - margin, 20, 6);
+
+}
+
+//un libro: x e baseY sono l'angolo in basso a sinistra, w e h larghezza e altezza
+function drawLibro(x, baseY, w, h, colore) {
+  push();
+  noStroke();
+
+  //copertina
+  fill(colore);
+  rect(x, baseY - h, w, h, 3, 3, 0, 0);
+
+  //ombra sul lato destro (nero trasparente)
+  fill(0, 50);
+  rect(x + w * 0.72, baseY - h, w * 0.28, h);
+
+  //luce sul lato sinistro (bianco trasparente)
+  fill(255, 30);
+  rect(x, baseY - h, w * 0.12, h);
+
+  //contorno scuro sottile
+  noFill();
+  stroke(0, 90);
+  strokeWeight(1);
+  rect(x + 0.5, baseY - h + 0.5, w - 1, h - 1, 3, 3, 0, 0);
+
+  //righe chiare del dorso: due in alto e due in basso
+  stroke(255, 90);
+  strokeWeight(2);
+  line(x, baseY - h + 14, x + w, baseY - h + 14);
+  line(x, baseY - h + 21, x + w, baseY - h + 21);
+  line(x, baseY - 14, x + w, baseY - 14);
+  line(x, baseY - 21, x + w, baseY - 21);
+
+  pop();
+}
+
+function drawTitolo() {
+  noStroke();
+
+  fill("#FFF6E6");
+  textSize(32);
+  text("Una libreria di università", margin, 50);
+
+  fill("#8B909A");
+  textSize(16);
+  text("Le prime 100 università del QS World University Rankings 2025", margin + 2, 76);
 }
 
