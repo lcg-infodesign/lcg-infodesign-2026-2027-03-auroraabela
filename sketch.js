@@ -7,31 +7,45 @@ let continents = [];
 let margin = 40;
 let gutter = 3;
 let topSpace = 90;
-let bottomSpace = 110;
+let bottomSpace = 50;
+let xShelf = 500;
 
 //scaffali
 let booksNumber = 25; //libri x scaffale
 let shelvesNumber = 4; //numero mensole
+let shelfWidth = 0; 
 
 let colorScale = {
-  'North America': '#66A9ED',
-  'Europe': '#ED66ED',
-  'Asia': '#EDA966',
-  'Oceania': '#66ED66',
-  'South America': '#7366ED',
+  'North America': '#EF6989',
+  'Europe': '#4CC9F0',
+  'Asia': '#FFD166',
+  'Oceania': '#06D6A0',
+  'South America': '#B28DFF',
 }
 
 let widthScale = {
-  'S': 15,
-  'M': 30,
-  'L': 45,
-  'XL': 60,
+  'S': 10,
+  'M': 20,
+  'L': 30,
+  'XL': 40,
 }
 
 
 async function setup() {
   createCanvas(windowWidth, windowHeight);
   data = await loadTable("assets/ranking.csv", ",", "header");
+
+  //larghezza della mensola: la riga di libri più larga + un po' di spazio ai lati
+  for (let shelf = 0; shelf < shelvesNumber; shelf++) {
+    let rowWidth = 0;
+    for (let i = shelf * booksNumber; i < (shelf + 1) * booksNumber; i++) {
+      rowWidth += widthScale[data.getString(i, "size")] + gutter;
+    }
+    if (rowWidth > shelfWidth) {
+      shelfWidth = rowWidth;
+    }
+  }
+  shelfWidth += 48; //24 px a sinistra e 24 px a destra
 }
 
 function draw() {
@@ -39,15 +53,17 @@ function draw() {
   background("#14171C");
   noStroke();
   drawTitolo();
+  drawLegenda();
 
-  //altezza scaffali
   let shelfHeight = (height - topSpace - bottomSpace) / shelvesNumber;
 
   //posizione libri
-  let xPos = margin;
+  let xPos = xShelf;
   let label = "";
+  let shelfNumber = -1; //il primo libro diventa 0
+  let baseY = 0;
 
-  //creazione libri
+  //libri dal dataset
   for (let rowNumber = 0; rowNumber < data.getRowCount(); rowNumber++) {
     let size = data.getString(rowNumber, "size");
     let continent = data.getString(rowNumber, "continent");
@@ -55,12 +71,13 @@ function draw() {
     let rank = data.getString(rowNumber, "ranking");
     let score = data.getNum(rowNumber, "qs overall score");
 
-    let shelfNumber = floor(rowNumber / booksNumber);
-    let baseY = topSpace + (shelfNumber + 1) * shelfHeight;
 
+    //scaffale dopo ogni 25 libri
     if (rowNumber % booksNumber == 0) {
-      xPos = margin + 24;
-      drawMensola(baseY, shelfHeight)
+      shelfNumber++;
+      baseY = topSpace + (shelfNumber + 1) * shelfHeight;
+      xPos = xShelf + 24;
+      drawMensola(baseY, shelfHeight);
     }
 
     let bookHeight = map(score, minScore, maxScore, shelfHeight * 0.45, shelfHeight * 0.9);
@@ -68,22 +85,20 @@ function draw() {
 
     drawLibro(xPos, baseY, bookWidth, bookHeight, colorScale[continent]);
 
-
     if (
       mouseX >= xPos &&
       mouseX <= xPos + bookWidth &&
       mouseY >= baseY - bookHeight &&
       mouseY <= baseY
     ) {
-      label = rank + name + score;
+      label = rank + "ª,  " + name + "  -  score:  " + score
     }
 
     xPos += bookWidth + gutter;
   }
 
-  drawLegenda();
 
-  //etichetta mouse
+  //hover mouse
   if (label != "") {
     textSize(14);
     fill(0, 200);
@@ -97,44 +112,41 @@ function draw() {
 function drawMensola(baseY, shelfHeight) {
   noStroke();
 
-  //asse mensola
+  //sfondo scaffale
+  fill("#1B2028");
+  rect(xShelf, baseY - shelfHeight + 10, shelfWidth, shelfHeight - 10);
+
+  //asse di legno
   fill("#5A4030");
-  rect(margin - 10, baseY, width - 2 * margin + 20, 18);
+  rect(xShelf - 10, baseY, shelfWidth + 20, 18);
 
-  //luce asse di legno
+  //filo di luce sul bordo alto dell'asse
   fill("#7A5A42");
-  rect(margin - 10, baseY, width - 2 * margin + 20, 6);
+  rect(xShelf - 10, baseY, shelfWidth + 20, 3);
 
-  //ombra asse di legno
-  fill("black");
-  rect(margin - 10, baseY + 18, width - margin, 20, 6);
-
+  //ombra sotto l'asse: stessa x e stessa larghezza dell'asse
+  fill(0, 90);
+  rect(xShelf - 10, baseY + 18, shelfWidth + 20, 6);
 }
 
-//un libro: x e baseY sono l'angolo in basso a sinistra, w e h larghezza e altezza
+
 function drawLibro(x, baseY, w, h, colore) {
   push();
   noStroke();
 
-  //copertina
+  //dorso
   fill(colore);
   rect(x, baseY - h, w, h, 3, 3, 0, 0);
 
-  //ombra sul lato destro (nero trasparente)
+  //ombra
   fill(0, 50);
   rect(x + w * 0.72, baseY - h, w * 0.28, h);
 
-  //luce sul lato sinistro (bianco trasparente)
+  //luce
   fill(255, 30);
   rect(x, baseY - h, w * 0.12, h);
 
-  //contorno scuro sottile
-  noFill();
-  stroke(0, 90);
-  strokeWeight(1);
-  rect(x + 0.5, baseY - h + 0.5, w - 1, h - 1, 3, 3, 0, 0);
-
-  //righe chiare del dorso: due in alto e due in basso
+  //righette dorso
   stroke(255, 90);
   strokeWeight(2);
   line(x, baseY - h + 14, x + w, baseY - h + 14);
@@ -150,10 +162,105 @@ function drawTitolo() {
 
   fill("#FFF6E6");
   textSize(32);
-  text("Una libreria di università", margin, 50);
+  text("Le migliori università", margin, 50);
 
   fill("#8B909A");
   textSize(16);
-  text("Le prime 100 università del QS World University Rankings 2025", margin + 2, 76);
+  text("Le migliori 100 università secondo il QS World University Rankings 2025", margin + 2, 76);
 }
 
+
+function drawLegenda() {
+  noStroke();
+
+  let x = margin;
+  let y = topSpace + 10;
+
+  let xLegenda = x;
+  let yLegenda = y + 35;
+
+  //continente
+  fill("#E8E6DF");
+  textSize(15);
+  text("Colore: continente dell'università", xLegenda, yLegenda)
+  yLegenda += 15;
+
+  //legenda continenti
+  textSize(14);
+
+    fill(colorScale['North America']);
+    rect(xLegenda, yLegenda, 14, 26);
+    fill("#CFD3DA");
+    text("North America", xLegenda + 24, yLegenda + 18);
+    yLegenda += 32;
+
+    fill(colorScale['Europe']);
+    rect(xLegenda, yLegenda, 14, 26);
+    fill("#CFD3DA");
+    text("Europe", xLegenda + 24, yLegenda + 18);
+    yLegenda += 32;
+
+    fill(colorScale['Asia']);
+    rect(xLegenda, yLegenda, 14, 26);
+    fill("#CFD3DA");
+    text("Asia", xLegenda + 24, yLegenda + 18);
+    yLegenda += 32;
+
+    fill(colorScale['Oceania']);
+    rect(xLegenda, yLegenda, 14, 26);
+    fill("#CFD3DA");
+    text("Oceania", xLegenda + 24, yLegenda + 18);
+    yLegenda += 32;
+
+    fill(colorScale['South America']);
+    rect(xLegenda, yLegenda, 14, 26);
+    fill("#CFD3DA");
+    text("South America", xLegenda + 24, yLegenda + 18);
+    yLegenda += 32;
+
+
+  //dimensione libro
+  yLegenda += 20;
+  fill("#E8E6DF");
+  textSize(15);
+  text( "Spessore: dimensione del campus", xLegenda, yLegenda);
+  yLegenda += 15;
+
+  //legenda dimensione libro
+  textSize(14);
+
+    drawLibro(xLegenda, yLegenda + 26, widthScale['S'], 26, "#8B909A");
+    fill("#CFD3DA");
+    text("S", xLegenda + widthScale['S'] + 8, yLegenda + 18);
+    yLegenda += 32;
+
+    drawLibro(xLegenda, yLegenda + 26, widthScale['M'], 26, "#8B909A");
+    fill("#CFD3DA");
+    text("M", xLegenda + widthScale['M'] + 8, yLegenda + 18);
+    yLegenda += 32;
+
+    drawLibro(xLegenda, yLegenda + 26, widthScale['L'], 26, "#8B909A");
+    fill("#CFD3DA");
+    text("L", xLegenda + widthScale['L'] + 8, yLegenda + 18);
+    yLegenda += 32;
+
+    drawLibro(xLegenda, yLegenda + 26, widthScale['XL'], 26, "#8B909A");
+    fill("#CFD3DA");
+    text("XL", xLegenda + widthScale['XL'] + 8, yLegenda + 18);
+    yLegenda += 32;
+
+
+  //resto della legenda  
+  yLegenda += 20;
+
+  fill("#E8E6DF");
+  textSize(15);
+  text("Altezza del libro: punteggio QS (da 100 a 59)", xLegenda, yLegenda);
+
+  textSize(13);
+  fill("#CFD3DA");
+  text("Ordine di ranking: dalla 1ª in alto a sinistra alla 100ª", xLegenda, yLegenda + 20);
+
+    fill("#8B909A");
+  text("Passa il mouse su un libro per leggere i dettagli", xLegenda, yLegenda + 90);
+}
