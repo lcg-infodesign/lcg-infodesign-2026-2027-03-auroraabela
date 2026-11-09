@@ -227,28 +227,31 @@ function drawLegenda() {
   yLegenda += 15;
 
   //legenda dimensione libro
-  textSize(14);
+   textSize(14);
 
-    drawLibro(xLegenda, yLegenda + 26, widthScale['S'], 26, "#8B909A");
+    fill("#8B909A");
+    rect(xLegenda, yLegenda, widthScale['S'], 26);
     fill("#CFD3DA");
     text("S", xLegenda + widthScale['S'] + 8, yLegenda + 18);
     yLegenda += 32;
 
-    drawLibro(xLegenda, yLegenda + 26, widthScale['M'], 26, "#8B909A");
+    fill("#8B909A");
+    rect(xLegenda, yLegenda, widthScale['M'], 26);
     fill("#CFD3DA");
     text("M", xLegenda + widthScale['M'] + 8, yLegenda + 18);
     yLegenda += 32;
 
-    drawLibro(xLegenda, yLegenda + 26, widthScale['L'], 26, "#8B909A");
+    fill("#8B909A");
+    rect(xLegenda, yLegenda, widthScale['L'], 26);
     fill("#CFD3DA");
     text("L", xLegenda + widthScale['L'] + 8, yLegenda + 18);
     yLegenda += 32;
 
-    drawLibro(xLegenda, yLegenda + 26, widthScale['XL'], 26, "#8B909A");
+    fill("#8B909A");
+    rect(xLegenda, yLegenda, widthScale['XL'], 26);
     fill("#CFD3DA");
     text("XL", xLegenda + widthScale['XL'] + 8, yLegenda + 18);
     yLegenda += 32;
-
 
   //resto della legenda  
   yLegenda += 20;
